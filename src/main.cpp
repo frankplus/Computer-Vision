@@ -1,7 +1,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-#define EXAMPLE 4 // set this to choose which example to execute
+#define EXAMPLE 3 // set this to choose which example to execute
 
 using namespace cv;
 using namespace std;
