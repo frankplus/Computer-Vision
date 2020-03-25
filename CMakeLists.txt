@@ -18,4 +18,4 @@ add_executable( ${PROJECT_NAME} ${SOURCES} )
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 
 # copy files in the assets folder into build directory
-file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
