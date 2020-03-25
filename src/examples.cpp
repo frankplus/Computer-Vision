@@ -7,7 +7,7 @@ using namespace cv;
 using namespace std;
 
 void run_example(int example) {
-    string test_image = "assets/bg.png";
+    string test_image = "data/bg.png";
 
     switch (example) {
         case 1:
