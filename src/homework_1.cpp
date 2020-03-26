@@ -7,9 +7,7 @@
 
 #define NEIGHBORHOOD_X 9
 #define NEIGHBORHOOD_Y 9
-#define MAX_R_CHANNEL 70
-#define MAX_G_CHANNEL 70
-#define MAX_B_CHANNEL 70
+#define THRESHOLD 7
 
 using namespace std;
 using namespace cv;
@@ -29,20 +27,20 @@ void onMouse( int event, int x, int y, int f, void *userdata ) {
         Mat *image = (Mat*) userdata;
         Mat image_out = image->clone();
 
-        if (y + NEIGHBORHOOD_Y > image_out.rows
-            || x + NEIGHBORHOOD_X > image_out.cols)
+        Mat image_hsv;
+        cvtColor(*image, image_hsv, COLOR_RGB2HSV);
+        GaussianBlur(image_hsv, image_hsv, Size(5, 5), 0);
+
+        if (y + NEIGHBORHOOD_Y > image_hsv.rows
+            || x + NEIGHBORHOOD_X > image_hsv.cols)
             return;
 
         Rect rect(x, y, NEIGHBORHOOD_X, NEIGHBORHOOD_Y);
-        Scalar mean = cv::mean(image_out(rect));
+        Scalar mean = cv::mean(image_hsv(rect));
 
-        for (int i = 0; i < image_out.rows; ++i)
-            for (int j = 0; j < image_out.cols; ++j) {
-                if ( 
-                    (abs(image_out.at<Vec3b> (i, j)[0] - mean[0]) < MAX_B_CHANNEL)
-                    && (abs(image_out.at<Vec3b> (i, j)[1] - mean[1]) < MAX_G_CHANNEL)
-                    && (abs(image_out.at<Vec3b> (i, j)[2] - mean[2]) < MAX_R_CHANNEL) 
-                ) {
+        for (int i = 0; i < image_hsv.rows; ++i)
+            for (int j = 0; j < image_hsv.cols; ++j) {
+                if ( abs(image_hsv.at<Vec3b> (i, j)[0] - mean[0]) < THRESHOLD) {
 
                     image_out.at<Vec3b> (i, j) = Vec3b(92,37,201);
 
