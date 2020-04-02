@@ -65,6 +65,20 @@ void main_homework_2() {
     cout << "Rotation vector : " << R << std::endl;
     cout << "Translation vector : " << T << std::endl;
 
+    // compute mean reprojection error
+    vector<Point2f> reprojected_points;
+    for (int image=0; image<images.size(); image++) {
+        vector<Point2f> extracted_corners = vector_corners2d[image];
+        projectPoints(corners3d, R.row(image), T.row(image), camera_matrix, dist_coeffs, reprojected_points);
+        double sum_errors = 0;
+        for (int corner=0; corner<corners3d.size(); corner++) {
+            double distance = norm(reprojected_points[corner] - extracted_corners[corner]);
+            sum_errors += distance;
+        }
+        double mean_errors = sum_errors / corners3d.size();
+        cout << "Image " << image << " mean error: " << mean_errors << endl;
+    }
+
     waitKey(0);
 }
 
