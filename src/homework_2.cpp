@@ -35,6 +35,20 @@ void main_homework_2() {
             corners3d.push_back(point);
         }
 
+    vector<vector<Point3f>> vector_corners3d;
+    vector<vector<Point2f>> vector_corners2d; 
+
+    for (const auto & image : images) {
+        // find chessboard corners on the image
+        vector<Point2f> corners2d;
+        bool patternfound = findChessboardCorners(image, patternsize, corners2d,
+                CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_FAST_CHECK | CALIB_CB_NORMALIZE_IMAGE);
+
+        if (patternfound) {
+            vector_corners2d.push_back(corners2d);
+            vector_corners3d.push_back(corners3d);
+        }
+    }
 
     waitKey(0);
 }
