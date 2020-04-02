@@ -50,6 +50,11 @@ void main_homework_2() {
         }
     }
 
+    // showing an image with detected corners for debugging purposes
+    int image_index = 0;
+    drawChessboardCorners(images[image_index], patternsize, Mat(vector_corners2d[image_index]), true);
+    imshow("image",images[image_index]);
+
     waitKey(0);
 }
 
