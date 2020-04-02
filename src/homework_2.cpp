@@ -55,6 +55,16 @@ void main_homework_2() {
     drawChessboardCorners(images[image_index], patternsize, Mat(vector_corners2d[image_index]), true);
     imshow("image",images[image_index]);
 
+    // performing camera calibration
+    cv::Mat camera_matrix,dist_coeffs,R,T;
+    Size img_size = Size(images[0].rows, images[0].cols);
+    calibrateCamera(vector_corners3d, vector_corners2d, img_size, camera_matrix, dist_coeffs, R, T);
+
+    cout << "Camera matrix : " << camera_matrix << std::endl;
+    cout << "Distortion coefficients : " << dist_coeffs << std::endl;
+    cout << "Rotation vector : " << R << std::endl;
+    cout << "Translation vector : " << T << std::endl;
+
     waitKey(0);
 }
 
