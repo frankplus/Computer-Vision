@@ -8,26 +8,34 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <numeric>
 
 #include "utils.h"
 
 using namespace std;
 using namespace cv;
 
-const string images_path = "data/lab2/checkerboard_images/";
+#define USE_MY_DATASET
+
+#ifdef USE_MY_DATASET
+const Size patternsize(7,5); 
+const float square_width = 0.03f;
+const float square_height = 0.03f;
+const string images_path = "data/lab2/my_checkerboard_images/*.jpg";
+const string test_image_path = "data/lab2/my_test_image.jpg";
+#else
+const Size patternsize(6,5); 
+const float square_width = 0.11f;
+const float square_height = 0.11f;
+const string images_path = "data/lab2/checkerboard_images/*.png";
 const string test_image_path = "data/lab2/test_image.png";
+#endif
 
 void main_homework_2() {
 
-    vector<Mat> images;
-    for (const auto & entry : filesystem::directory_iterator(images_path))
-        images.push_back(imread(entry.path()));
-
-    show_collage(images);
-
-    Size patternsize(6,5); 
-    const float square_width = 0.11f;
-    const float square_height = 0.11f;
+    // find images
+    vector<cv::String> images;
+    glob(images_path, images);
 
     // compute 3D coordinates of the corners (in the chessboard reference system)
     vector<Point3f> corners3d;
@@ -40,26 +48,37 @@ void main_homework_2() {
     vector<vector<Point3f>> vector_corners3d;
     vector<vector<Point2f>> vector_corners2d; 
 
-    for (const auto & image : images) {
+    Mat image, gray;
+    vector<Point2f> corners2d;
+    bool patternfound;
+
+    for(String imgpath: images) {
+        cout << imgpath << endl;
+        image = imread(imgpath);
+        resize(image, image, Size(image.cols / 2.0, image.rows / 2.0));
+
         // find chessboard corners on the image
-        vector<Point2f> corners2d;
-        bool patternfound = findChessboardCorners(image, patternsize, corners2d,
+        patternfound = findChessboardCorners(image, patternsize, corners2d,
                 CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_FAST_CHECK | CALIB_CB_NORMALIZE_IMAGE);
 
         if (patternfound) {
+            cvtColor(image,gray,cv::COLOR_BGR2GRAY);
+            TermCriteria criteria(TermCriteria::COUNT + TermCriteria::EPS, 30, 0.001);
+            cornerSubPix(gray,corners2d,Size(17,17), Size(-1,-1),criteria);
             vector_corners2d.push_back(corners2d);
             vector_corners3d.push_back(corners3d);
+        } else {
+            cout << "Pattern not found" << endl;
         }
     }
 
     // showing an image with detected corners for debugging purposes
-    int image_index = 0;
-    drawChessboardCorners(images[image_index], patternsize, Mat(vector_corners2d[image_index]), true);
-    imshow("image",images[image_index]);
+    drawChessboardCorners(image, patternsize, corners2d, patternfound);
+    imshow("image",image);
 
     // performing camera calibration
     cv::Mat camera_matrix,dist_coeffs,R,T;
-    Size img_size = images[0].size();
+    Size img_size = image.size();
     calibrateCamera(vector_corners3d, vector_corners2d, img_size, camera_matrix, dist_coeffs, R, T);
 
     cout << "Camera matrix : " << camera_matrix << std::endl;
@@ -78,8 +97,8 @@ void main_homework_2() {
             double distance = norm(reprojected_points[corner] - extracted_corners[corner]);
             sum_errors += distance;
         }
-        double mean_errors = sum_errors / corners3d.size();
-        img_mean_errors.push_back(mean_errors);
+        double mean_error = sum_errors / corners3d.size();
+        img_mean_errors.push_back(mean_error);
     }
 
     // find best and worst image
@@ -88,17 +107,22 @@ void main_homework_2() {
     int worst_image_index = bestworst_image.second - begin(img_mean_errors);
     double best_error = *bestworst_image.first;
     double worst_error = *bestworst_image.second;
+    double mean_error = accumulate(begin(img_mean_errors), end(img_mean_errors), 0.0) / images.size(); 
 
-    cout << "best error: " << best_error << endl;
-    cout << "worst error: " << worst_error << endl;
+    cout << "best mean error: " << best_error << endl;
+    cout << "worst mean error: " << worst_error << endl;
+    cout << "mean of mean errors: " << mean_error << endl;
 
-    imshow("best image", images[best_image_index]);
-    imshow("worst image", images[worst_image_index]);
+    Mat best_image = imread(images[best_image_index]);
+    Mat worst_image = imread(images[worst_image_index]);
+    imshow("best image", best_image);
+    imshow("worst image", worst_image);
 
     // undistort and rectify a test image 
     Mat test_image = imread(test_image_path);
-    Mat output_image, rect_mat, mapx, mapy;
+    resize(test_image, test_image, Size(test_image.cols / 2.0, test_image.rows / 2.0));
     img_size = test_image.size();
+    Mat output_image, rect_mat, mapx, mapy;
     initUndistortRectifyMap(camera_matrix, dist_coeffs, rect_mat, camera_matrix, img_size, CV_32FC1, mapx, mapy);
     remap(test_image, output_image, mapx, mapy, INTER_LINEAR);
 
