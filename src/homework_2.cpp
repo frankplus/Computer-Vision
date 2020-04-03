@@ -14,21 +14,23 @@
 using namespace std;
 using namespace cv;
 
+const string images_path = "data/lab2/checkerboard_images/";
+const string test_image_path = "data/lab2/test_image.png";
+
 void main_homework_2() {
 
-    string path = "data/lab2/checkerboard_images/";
     vector<Mat> images;
-    for (const auto & entry : filesystem::directory_iterator(path))
+    for (const auto & entry : filesystem::directory_iterator(images_path))
         images.push_back(imread(entry.path()));
 
     show_collage(images);
 
     Size patternsize(6,5); 
-    const float square_width = 30.0f;
-    const float square_height = 30.0f;
-    vector<Point3f> corners3d;
+    const float square_width = 0.11f;
+    const float square_height = 0.11f;
 
     // compute 3D coordinates of the corners (in the chessboard reference system)
+    vector<Point3f> corners3d;
     for (int i=0; i<patternsize.height; i++)
         for (int j=0; j<patternsize.width; j++) {
             Point3f point = Point3f(j*square_width, i*square_height, 0);
@@ -57,7 +59,7 @@ void main_homework_2() {
 
     // performing camera calibration
     cv::Mat camera_matrix,dist_coeffs,R,T;
-    Size img_size = Size(images[0].rows, images[0].cols);
+    Size img_size = images[0].size();
     calibrateCamera(vector_corners3d, vector_corners2d, img_size, camera_matrix, dist_coeffs, R, T);
 
     cout << "Camera matrix : " << camera_matrix << std::endl;
@@ -67,6 +69,7 @@ void main_homework_2() {
 
     // compute mean reprojection error
     vector<Point2f> reprojected_points;
+    vector<double> img_mean_errors;
     for (int image=0; image<images.size(); image++) {
         vector<Point2f> extracted_corners = vector_corners2d[image];
         projectPoints(corners3d, R.row(image), T.row(image), camera_matrix, dist_coeffs, reprojected_points);
@@ -76,8 +79,21 @@ void main_homework_2() {
             sum_errors += distance;
         }
         double mean_errors = sum_errors / corners3d.size();
-        cout << "Image " << image << " mean error: " << mean_errors << endl;
+        img_mean_errors.push_back(mean_errors);
     }
+
+    // find best and worst image
+    auto bestworst_image = minmax_element(begin(img_mean_errors), end(img_mean_errors));
+    int best_image_index = bestworst_image.first - begin(img_mean_errors);
+    int worst_image_index = bestworst_image.second - begin(img_mean_errors);
+    double best_error = *bestworst_image.first;
+    double worst_error = *bestworst_image.second;
+
+    cout << "best error: " << best_error << endl;
+    cout << "worst error: " << worst_error << endl;
+
+    imshow("best image", images[best_image_index]);
+    imshow("worst image", images[worst_image_index]);
 
     waitKey(0);
 }
