@@ -34,7 +34,7 @@ const string test_image_path = "data/lab2/test_image.png";
 void main_homework_2() {
 
     // find images
-    vector<cv::String> images;
+    vector<String> images;
     glob(images_path, images);
 
     // compute 3D coordinates of the corners (in the chessboard reference system)
@@ -52,7 +52,8 @@ void main_homework_2() {
     vector<Point2f> corners2d;
     bool patternfound;
 
-    for(String imgpath: images) {
+    for (String imgpath: images) {
+        // load image
         cout << imgpath << endl;
         image = imread(imgpath);
         resize(image, image, Size(image.cols / 2.0, image.rows / 2.0));
@@ -62,9 +63,11 @@ void main_homework_2() {
                 CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_FAST_CHECK | CALIB_CB_NORMALIZE_IMAGE);
 
         if (patternfound) {
-            cvtColor(image,gray,cv::COLOR_BGR2GRAY);
+            // refine pixel coordinates
+            cvtColor(image, gray, COLOR_BGR2GRAY);
             TermCriteria criteria(TermCriteria::COUNT + TermCriteria::EPS, 30, 0.001);
-            cornerSubPix(gray,corners2d,Size(17,17), Size(-1,-1),criteria);
+            cornerSubPix(gray, corners2d, Size(17,17), Size(-1,-1), criteria);
+            
             vector_corners2d.push_back(corners2d);
             vector_corners3d.push_back(corners3d);
         } else {
@@ -74,17 +77,17 @@ void main_homework_2() {
 
     // showing an image with detected corners for debugging purposes
     drawChessboardCorners(image, patternsize, corners2d, patternfound);
-    imshow("image",image);
+    imshow("Image",image);
 
     // performing camera calibration
-    cv::Mat camera_matrix,dist_coeffs,R,T;
+    Mat camera_matrix, dist_coeffs, R, T;
     Size img_size = image.size();
     calibrateCamera(vector_corners3d, vector_corners2d, img_size, camera_matrix, dist_coeffs, R, T);
 
-    cout << "Camera matrix : " << camera_matrix << std::endl;
-    cout << "Distortion coefficients : " << dist_coeffs << std::endl;
-    cout << "Rotation vector : " << R << std::endl;
-    cout << "Translation vector : " << T << std::endl;
+    cout << "Camera matrix : " << camera_matrix << endl;
+    cout << "Distortion coefficients : " << dist_coeffs << endl;
+    cout << "Rotation vector : " << R << endl;
+    cout << "Translation vector : " << T << endl;
 
     // compute mean reprojection error
     vector<Point2f> reprojected_points;
@@ -115,8 +118,8 @@ void main_homework_2() {
 
     Mat best_image = imread(images[best_image_index]);
     Mat worst_image = imread(images[worst_image_index]);
-    imshow("best image", best_image);
-    imshow("worst image", worst_image);
+    imshow("Best image", best_image);
+    imshow("Worst image", worst_image);
 
     // undistort and rectify a test image 
     Mat test_image = imread(test_image_path);
@@ -126,8 +129,8 @@ void main_homework_2() {
     initUndistortRectifyMap(camera_matrix, dist_coeffs, rect_mat, camera_matrix, img_size, CV_32FC1, mapx, mapy);
     remap(test_image, output_image, mapx, mapy, INTER_LINEAR);
 
-    imshow("test image original", test_image);
-    imshow("test image undistorted", output_image);
+    imshow("Test image original", test_image);
+    imshow("Test image undistorted", output_image);
 
     waitKey(0);
 }
