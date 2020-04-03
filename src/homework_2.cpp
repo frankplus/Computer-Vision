@@ -95,6 +95,16 @@ void main_homework_2() {
     imshow("best image", images[best_image_index]);
     imshow("worst image", images[worst_image_index]);
 
+    // undistort and rectify a test image 
+    Mat test_image = imread(test_image_path);
+    Mat output_image, rect_mat, mapx, mapy;
+    img_size = test_image.size();
+    initUndistortRectifyMap(camera_matrix, dist_coeffs, rect_mat, camera_matrix, img_size, CV_32FC1, mapx, mapy);
+    remap(test_image, output_image, mapx, mapy, INTER_LINEAR);
+
+    imshow("test image original", test_image);
+    imshow("test image undistorted", output_image);
+
     waitKey(0);
 }
 
