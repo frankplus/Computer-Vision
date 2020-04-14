@@ -6,7 +6,6 @@
 #include <opencv2/core.hpp>
 #include <opencv2/calib3d.hpp>
 #include <string>
-#include <filesystem>
 #include <vector>
 #include <numeric>
 
@@ -15,7 +14,7 @@
 using namespace std;
 using namespace cv;
 
-#define USE_MY_DATASET
+// #define USE_MY_DATASET
 
 #ifdef USE_MY_DATASET
 const Size patternsize(7,5); 
@@ -56,7 +55,9 @@ void main_homework_2() {
         // load image
         cout << imgpath << endl;
         image = imread(imgpath);
-        resize(image, image, Size(image.cols / 2.0, image.rows / 2.0));
+        #ifdef USE_MY_DATASET
+            resize(image, image, Size(image.cols / 2.0, image.rows / 2.0));
+        #endif
 
         // find chessboard corners on the image
         patternfound = findChessboardCorners(image, patternsize, corners2d,
@@ -82,12 +83,13 @@ void main_homework_2() {
     // performing camera calibration
     Mat camera_matrix, dist_coeffs, R, T;
     Size img_size = image.size();
-    calibrateCamera(vector_corners3d, vector_corners2d, img_size, camera_matrix, dist_coeffs, R, T);
+    double error = calibrateCamera(vector_corners3d, vector_corners2d, img_size, camera_matrix, dist_coeffs, R, T);
 
     cout << "Camera matrix : " << camera_matrix << endl;
     cout << "Distortion coefficients : " << dist_coeffs << endl;
     cout << "Rotation vector : " << R << endl;
     cout << "Translation vector : " << T << endl;
+    cout << "Calibrate camera error: " << error << endl;
 
     // compute mean reprojection error
     vector<Point2f> reprojected_points;
@@ -123,7 +125,9 @@ void main_homework_2() {
 
     // undistort and rectify a test image 
     Mat test_image = imread(test_image_path);
-    resize(test_image, test_image, Size(test_image.cols / 2.0, test_image.rows / 2.0));
+    #ifdef USE_MY_DATASET
+        resize(test_image, test_image, Size(test_image.cols / 2.0, test_image.rows / 2.0));
+    #endif
     img_size = test_image.size();
     Mat output_image, rect_mat, mapx, mapy;
     initUndistortRectifyMap(camera_matrix, dist_coeffs, rect_mat, camera_matrix, img_size, CV_32FC1, mapx, mapy);

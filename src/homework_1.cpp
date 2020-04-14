@@ -13,7 +13,7 @@ using namespace std;
 using namespace cv;
 
 void main_homework_1() {
-    Mat input_img = imread("data/robocup.jpg");
+    Mat input_img = imread("data/lab1/robocup.jpg");
 
     resize(input_img, input_img, Size(input_img.cols / 2.0, input_img.rows / 2.0));
     imshow("img", input_img);
