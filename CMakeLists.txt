@@ -17,5 +17,5 @@ file(GLOB SOURCES "src/*.cpp")
 add_executable( ${PROJECT_NAME} ${SOURCES} )
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 
-# copy files in the assets folder into build directory
+# copy files in the data folder into build directory
 file(COPY data DESTINATION ${CMAKE_BINARY_DIR})

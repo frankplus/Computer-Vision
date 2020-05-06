@@ -26,7 +26,7 @@ struct FilterParams
 };
 
 void onTrackbarChange(int pos, void *userdata) {
-    FilterParams *filter_params = (FilterParams*) userdata;
+    FilterParams *filter_params = static_cast<FilterParams*>(userdata);
     Filter *filter = filter_params->filter;
 
     switch (filter_params->type) {
@@ -35,13 +35,13 @@ void onTrackbarChange(int pos, void *userdata) {
             break;
         }
         case GAUSSIAN: {
-            GaussianFilter *gaussian_filter = static_cast<GaussianFilter*>(filter);
+            GaussianFilter *gaussian_filter = dynamic_cast<GaussianFilter*>(filter);
             gaussian_filter->setSize(filter_params->filter_size);
             gaussian_filter->setSigma(filter_params->sigma1);
             break;
         }
         case BILATERAL: {
-            BilateralFilter *bilateral_filter = static_cast<BilateralFilter*>(filter);
+            BilateralFilter *bilateral_filter = dynamic_cast<BilateralFilter*>(filter);
             bilateral_filter->setSigmaRange(filter_params->sigma1);
             bilateral_filter->setSigmaSpace(filter_params->sigma2);
             break;
@@ -88,6 +88,8 @@ void main_homework_3() {
     merge(img_channels, equalized_img);
     cvtColor(equalized_img, equalized_img, COLOR_HSV2BGR);
     imshow("equalized hsv image", equalized_img);
+
+    /*************** PART 2 ***************/
 
     // Create windows
     namedWindow("median filter");
