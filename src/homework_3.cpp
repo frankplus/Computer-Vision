@@ -25,7 +25,7 @@ struct FilterParams
     int sigma2;
 };
 
-void onTrackbarChange(int pos, void *userdata) {
+void on_trackbar_change(int pos, void *userdata) {
     FilterParams *filter_params = static_cast<FilterParams*>(userdata);
     Filter *filter = filter_params->filter;
 
@@ -111,13 +111,13 @@ void main_homework_3() {
     FilterParams bilateral_params = { BILATERAL, &bilateral_filter, "bilateral filter", 8, 75, 75};
 
     // Add parameters trackbars to windows
-    createTrackbar("kernel size", "median filter", &median_params.filter_size, 16, onTrackbarChange, (void*)&median_params);
+    createTrackbar("kernel size", "median filter", &median_params.filter_size, 16, on_trackbar_change, (void*)&median_params);
 
-    createTrackbar("kernel size", "gaussian filter", &gaussian_params.filter_size, 16, onTrackbarChange, (void*)&gaussian_params);
-    createTrackbar("sigma", "gaussian filter", &gaussian_params.sigma1, 50, onTrackbarChange, (void*)&gaussian_params);
+    createTrackbar("kernel size", "gaussian filter", &gaussian_params.filter_size, 16, on_trackbar_change, (void*)&gaussian_params);
+    createTrackbar("sigma", "gaussian filter", &gaussian_params.sigma1, 50, on_trackbar_change, (void*)&gaussian_params);
 
-    createTrackbar("sigma range", "bilateral filter", &bilateral_params.sigma1, 150, onTrackbarChange, (void*)&bilateral_params);
-    createTrackbar("sigma space", "bilateral filter", &bilateral_params.sigma2, 150, onTrackbarChange, (void*)&bilateral_params);
+    createTrackbar("sigma range", "bilateral filter", &bilateral_params.sigma1, 150, on_trackbar_change, (void*)&bilateral_params);
+    createTrackbar("sigma space", "bilateral filter", &bilateral_params.sigma2, 150, on_trackbar_change, (void*)&bilateral_params);
     
     waitKey(0);
 }

@@ -10,6 +10,7 @@ using namespace cv;
 
 const char* canny_window_name = "homework 4 - canny edge detection";
 const char* hough_window_name = "homework 4 - hough lines detection";
+const char* result_window_name = "homework 4 - result";
 
 struct HoughParams {
     Mat detected_edges;
@@ -30,43 +31,103 @@ struct CannyParams {
     HoughParams *hough_params;
 };
 
-static void houghTransform(int, void *params) {
+struct Line {
+    Point a;
+    Point b;
+};
+
+void polar_lines_to_cartesian(vector<Vec2f> &input_lines, vector<Line> &output_lines) {
+    for ( size_t i = 0; i < input_lines.size(); i++ ) {
+        float rho = input_lines[i][0], theta = input_lines[i][1];
+        double a = cos(theta), b = sin(theta);
+        double x0 = a*rho, y0 = b*rho;
+        Line line;
+        line.a.x = cvRound(x0 + 1000*(-b));
+        line.a.y = cvRound(y0 + 1000*(a));
+        line.b.x = cvRound(x0 - 1000*(-b));
+        line.b.y = cvRound(y0 - 1000*(a));
+        output_lines.push_back(line);
+    }
+}
+
+// Finds the intersection of two lines, or returns false.
+// The lines are defined by (o1, p1) and (o2, p2).
+bool lines_intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2,
+                      Point2f &r)
+{
+    Point2f x = o2 - o1;
+    Point2f d1 = p1 - o1;
+    Point2f d2 = p2 - o2;
+
+    float cross = d1.x*d2.y - d1.y*d2.x;
+    if (abs(cross) < /*EPS*/1e-8)
+        return false;
+
+    double t1 = (x.x * d2.y - x.y * d2.x)/cross;
+    r = o1 + d1 * t1;
+    return true;
+}
+
+void draw_circle(Mat img, Vec3f circle_to_draw) {
+    Point center(cvRound(circle_to_draw[0]), cvRound(circle_to_draw[1]));
+    int radius = cvRound(circle_to_draw[2]);
+    circle( img, center, radius, Scalar(0,255,0), -1, 8, 0 );
+}
+
+void show_result(Mat img, Line line1, Line line2, Vec3f circle_to_draw) {
+    // find lower triangle vertices
+    Point2f pt_intersection, pt1, pt2;
+    lines_intersection(line1.a, line1.b, line2.a, line2.b, pt_intersection);
+    pt1 = line1.a.y > line1.b.y ? line1.a : line1.b;
+    pt2 = line2.a.y > line2.b.y ? line2.a : line2.b;
+    Point triangle[] = {pt1, pt2, pt_intersection};
+    const Point* polygons[] = {triangle};
+    int npt[] = { 3 };
+
+    // draw triangle and circle and show result
+    fillPoly(img, polygons, npt, 1, Scalar(0,0,255), LINE_8);
+    draw_circle(img, circle_to_draw);
+
+    imshow( result_window_name, img );
+}
+
+static void hough_transform(int, void *params) {
     HoughParams *hough_params = static_cast<HoughParams*>(params); 
 
+    // detect lines
     vector<Vec2f> lines;
     Mat detected_edges = hough_params->detected_edges;
     HoughLines(detected_edges, lines, hough_params->rho_resolution, 
                 hough_params->theta_resolution, hough_params->lines_threshold, 0, 0 ); 
     
+    // draw lines
+    vector<Line> lines_cartesian;
+    polar_lines_to_cartesian(lines, lines_cartesian);
+    Mat dst = hough_params->orig_img.clone();
+    for ( Line detected_line : lines_cartesian ) {
+        line( dst, detected_line.a, detected_line.b, Scalar(0,0,255), 2, LINE_AA);
+    }
+
+    // detect circles
     vector<Vec3f> circles;
     HoughCircles(detected_edges, circles, HOUGH_GRADIENT, 2, detected_edges.rows/4, 
                     200, hough_params->circle_acc_threshold, 2, hough_params->circle_max_radius );
 
-    // Draw the lines and circles and show result
-    Mat dst = hough_params->orig_img.clone();
-    for ( size_t i = 0; i < lines.size(); i++ ) {
-        float rho = lines[i][0], theta = lines[i][1];
-        Point pt1, pt2;
-        double a = cos(theta), b = sin(theta);
-        double x0 = a*rho, y0 = b*rho;
-        pt1.x = cvRound(x0 + 1000*(-b));
-        pt1.y = cvRound(y0 + 1000*(a));
-        pt2.x = cvRound(x0 - 1000*(-b));
-        pt2.y = cvRound(y0 - 1000*(a));
-        line( dst, pt1, pt2, Scalar(0,0,255), 2, LINE_AA);
-    }
+    // draw circles
+    for (Vec3f circle : circles) {
+        draw_circle(dst, circle);
+    } 
 
-    for( size_t i = 0; i < circles.size(); i++ )
-    {
-         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-         int radius = cvRound(circles[i][2]);
-         circle( dst, center, radius, Scalar(0,255,0), -1, 8, 0 );
-    }
-
+    // show detected lines and circles
     imshow( hough_window_name, dst );
+
+    // show final result
+    if (lines_cartesian.size() >= 2 && circles.size() > 0) {
+        show_result(hough_params->orig_img.clone(), lines_cartesian[0], lines_cartesian[1], circles[0]);
+    }
 }
 
-static void cannyThreshold(int, void *params) {
+static void canny_threshold(int, void *params) {
     CannyParams *canny_params = static_cast<CannyParams*>(params); 
     Canny( canny_params->src, canny_params->detected_edges, canny_params->low_threshold, 
             canny_params->low_threshold * canny_params->threshold_ratio, canny_params->kernel_size );
@@ -76,7 +137,7 @@ static void cannyThreshold(int, void *params) {
 
     // run hough transform
     canny_params->hough_params->detected_edges = canny_params->detected_edges;
-    houghTransform(0, canny_params->hough_params);
+    hough_transform(0, canny_params->hough_params);
 }
 
 void main_homework_4() {
@@ -100,16 +161,16 @@ void main_homework_4() {
     const int max_hough_circle_threshold = 50;
 
     createTrackbar( "Min canny threshold:", canny_window_name, &canny_params.low_threshold, 
-                    max_low_threshold, cannyThreshold, &canny_params );
+                    max_low_threshold, canny_threshold, &canny_params );
 
     createTrackbar( "hough lines threshold:", hough_window_name, &hough_params.lines_threshold, 
-                    max_hough_lines_threshold, houghTransform, &hough_params );
+                    max_hough_lines_threshold, hough_transform, &hough_params );
 
     createTrackbar( "hough circle threshold:", hough_window_name, &hough_params.circle_acc_threshold, 
-                    max_hough_circle_threshold, houghTransform, &hough_params );
+                    max_hough_circle_threshold, hough_transform, &hough_params );
 
-    cannyThreshold(0, &canny_params);
-    houghTransform(0, &hough_params);
+    canny_threshold(0, &canny_params);
+    hough_transform(0, &hough_params);
 
     waitKey(0);
 }
