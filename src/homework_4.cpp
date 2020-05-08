@@ -36,6 +36,12 @@ struct Line {
     Point b;
 };
 
+/**
+ * Convert lines in polar coordinates which is returned by hough transform into pairs 
+ * of points in x/y coordinates which delimit the lines.
+ * @param input_lines The vector of input lines, each line is a Vec2f containing rho and theta
+ * @param output_lines The output vector of lines, each line is a Line object containing a pair of Point.
+ */
 void polar_lines_to_cartesian(vector<Vec2f> &input_lines, vector<Line> &output_lines) {
     for ( size_t i = 0; i < input_lines.size(); i++ ) {
         float rho = input_lines[i][0], theta = input_lines[i][1];
@@ -50,8 +56,11 @@ void polar_lines_to_cartesian(vector<Vec2f> &input_lines, vector<Line> &output_l
     }
 }
 
-// Finds the intersection of two lines, or returns false.
-// The lines are defined by (o1, p1) and (o2, p2).
+/**
+ * Finds the intersection of two lines, or returns false.
+ * The lines are defined by (o1, p1) and (o2, p2).
+ * The intersection point will be stored in Point2f &r
+ */
 bool lines_intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2,
                       Point2f &r)
 {
@@ -68,29 +77,51 @@ bool lines_intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2,
     return true;
 }
 
+/**
+ * Draw a circle on given image
+ * @param img The image onto which the circle is to be drawn
+ * @param circle_to_draw The circle described as a Vec3f contaning center coordinates and circle radius.
+ */
 void draw_circle(Mat img, Vec3f circle_to_draw) {
     Point center(cvRound(circle_to_draw[0]), cvRound(circle_to_draw[1]));
     int radius = cvRound(circle_to_draw[2]);
     circle( img, center, radius, Scalar(0,255,0), -1, 8, 0 );
 }
 
+/**
+ * Fill the lower triangle between two given intersecting lines and fill given circle, then show final result.
+ * @param img The source image
+ * @param line1 and line2 The pair of lines delimiting the triangle
+ * @param circle_to_draw The circle to draw described as a Vec3f contaning center coordinates and circle radius.
+ */
 void show_result(Mat img, Line line1, Line line2, Vec3f circle_to_draw) {
-    // find lower triangle vertices
-    Point2f pt_intersection, pt1, pt2;
-    lines_intersection(line1.a, line1.b, line2.a, line2.b, pt_intersection);
-    pt1 = line1.a.y > line1.b.y ? line1.a : line1.b;
-    pt2 = line2.a.y > line2.b.y ? line2.a : line2.b;
-    Point triangle[] = {pt1, pt2, pt_intersection};
-    const Point* polygons[] = {triangle};
-    int npt[] = { 3 };
 
-    // draw triangle and circle and show result
-    fillPoly(img, polygons, npt, 1, Scalar(0,0,255), LINE_8);
+    Point2f pt_intersection, pt1, pt2;
+
+    // find lower triangle vertices
+    if ( lines_intersection(line1.a, line1.b, line2.a, line2.b, pt_intersection) ) {
+        pt1 = line1.a.y > line1.b.y ? line1.a : line1.b;
+        pt2 = line2.a.y > line2.b.y ? line2.a : line2.b;
+        Point triangle[] = {pt1, pt2, pt_intersection};
+        const Point* polygons[] = {triangle};
+        int npt[] = { 3 };
+
+        // draw triangle
+        fillPoly(img, polygons, npt, 1, Scalar(0,0,255), LINE_8);
+    }
+
+    // draw circle
     draw_circle(img, circle_to_draw);
 
+    // show result
     imshow( result_window_name, img );
 }
 
+/**
+ * Callback function which runs hough transform to detect lines and circles in an image, then it finally 
+ * show the final image coloring the space between two detected lines and a detected circle.
+ * @param params An HoughParams object contaning the source images, and parameters
+ */
 static void hough_transform(int, void *params) {
     HoughParams *hough_params = static_cast<HoughParams*>(params); 
 
@@ -127,6 +158,11 @@ static void hough_transform(int, void *params) {
     }
 }
 
+/**
+ * Callback function which runs canny edge detector on an image to detect edges and show the result.
+ * Then it finally calls the hough_transform callback on the detected edges to detect lines and circles.
+ * @param params An CannyParams object contaning the source images, and parameters
+ */
 static void canny_threshold(int, void *params) {
     CannyParams *canny_params = static_cast<CannyParams*>(params); 
     Canny( canny_params->src, canny_params->detected_edges, canny_params->low_threshold, 
