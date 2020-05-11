@@ -62,8 +62,7 @@ void polar_lines_to_cartesian(vector<Vec2f> &input_lines, vector<Line> &output_l
  * The intersection point will be stored in Point2f &r
  */
 bool lines_intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2,
-                      Point2f &r)
-{
+                      Point2f &r) {
     Point2f x = o2 - o1;
     Point2f d1 = p1 - o1;
     Point2f d2 = p2 - o2;
@@ -178,7 +177,15 @@ static void canny_threshold(int, void *params) {
 
 void main_homework_4() {
 
-    Mat input_img = imread("data/lab4/input.png");
+    // loads an image
+    String path;
+    cout << "Type input image path (empty input loads 'data/lab4/input.png'): ";
+    getline(cin, path);
+    if (path.empty()) {
+        path = "data/lab4/input.png";
+    }
+    Mat input_img = imread(path);
+
     namedWindow( canny_window_name );
     namedWindow( hough_window_name );
 

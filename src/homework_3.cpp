@@ -13,6 +13,25 @@
 using namespace std;
 using namespace cv;
 
+/**
+ * Generate histograms for the three channels of an image
+ * @param img_channels Vector of 3 image channels
+ * @param winname Name of the window
+ */
+void generate_show_histograms(vector<Mat> img_channels, string winname) {
+    int histSize = 256;
+    float range[] = { 0, 256 };
+    const float* histRange = { range };
+
+    Mat b_hist, g_hist, r_hist;
+    calcHist( &img_channels[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange);
+    calcHist( &img_channels[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange);
+    calcHist( &img_channels[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange);
+
+    vector<Mat> hists{b_hist, g_hist, r_hist};
+    show_histogram(hists, winname);
+}
+
 enum FilterType { MEDIAN, GAUSSIAN, BILATERAL };
 
 struct FilterParams
@@ -25,8 +44,8 @@ struct FilterParams
     int sigma2;
 };
 
-void on_trackbar_change(int pos, void *userdata) {
-    FilterParams *filter_params = static_cast<FilterParams*>(userdata);
+void on_trackbar_change(int, void *params) {
+    FilterParams *filter_params = static_cast<FilterParams*>(params);
     Filter *filter = filter_params->filter;
 
     switch (filter_params->type) {
@@ -53,11 +72,7 @@ void on_trackbar_change(int pos, void *userdata) {
     imshow(filter_params->window_name, filter->getResult());
 }
 
-void main_homework_3() {
-    // 1. Loads an image
-    Mat input_img = imread("data/lab3/image.jpg");
-    imshow("input image", input_img);
-    
+Mat part_1_equalize(Mat input_img) {
     // 2. Prints the histograms of the image
     vector<Mat> img_channels;
     split(input_img, img_channels);
@@ -89,25 +104,23 @@ void main_homework_3() {
     cvtColor(equalized_img, equalized_img, COLOR_HSV2BGR);
     imshow("equalized hsv image", equalized_img);
 
-    /*************** PART 2 ***************/
+    return equalized_img;
+}
 
+void part_2_filtering(Mat input_img) {
     // Create windows
     namedWindow("median filter");
     namedWindow("gaussian filter");
     namedWindow("bilateral filter");
 
-    imshow("median filter", equalized_img);
-    imshow("gaussian filter", equalized_img);
-    imshow("bilateral filter", equalized_img);
-
     // Initialize filters
-    MedianFilter median_filter(equalized_img, 1);
+    MedianFilter median_filter(input_img, 1);
     FilterParams median_params = { MEDIAN, &median_filter, "median filter", 8};
 
-    GaussianFilter gaussian_filter(equalized_img, 1);
+    GaussianFilter gaussian_filter(input_img, 1);
     FilterParams gaussian_params = { GAUSSIAN, &gaussian_filter, "gaussian filter", 8, 25};
 
-    BilateralFilter bilateral_filter(equalized_img, 1);
+    BilateralFilter bilateral_filter(input_img, 1);
     FilterParams bilateral_params = { BILATERAL, &bilateral_filter, "bilateral filter", 8, 75, 75};
 
     // Add parameters trackbars to windows
@@ -118,25 +131,31 @@ void main_homework_3() {
 
     createTrackbar("sigma range", "bilateral filter", &bilateral_params.sigma1, 150, on_trackbar_change, (void*)&bilateral_params);
     createTrackbar("sigma space", "bilateral filter", &bilateral_params.sigma2, 150, on_trackbar_change, (void*)&bilateral_params);
-    
+
+    on_trackbar_change(0, &median_params);
+    on_trackbar_change(0, &gaussian_params);
+    on_trackbar_change(0, &bilateral_params);
+
     waitKey(0);
 }
 
-/**
- * Generate histograms for the three channels of an image
- * @param img_channels Vector of 3 image channels
- * @param winname Name of the window
- */
-void generate_show_histograms(vector<Mat> img_channels, string winname) {
-    int histSize = 256;
-    float range[] = { 0, 256 };
-    const float* histRange = { range };
+void main_homework_3() {
 
-    Mat b_hist, g_hist, r_hist;
-    calcHist( &img_channels[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange);
-    calcHist( &img_channels[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange);
-    calcHist( &img_channels[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange);
+    String path;
+    cout << "Type input image path (empty input loads 'data/lab3/image.jpg'): ";
+    getline(cin, path);
+    if (path.empty()) {
+        path = "data/lab3/image.jpg";
+    }
+    Mat input_img = imread(path);
+    imshow("input image", input_img);
 
-    vector<Mat> hists{b_hist, g_hist, r_hist};
-    show_histogram(hists, winname);
+    Mat equalized = part_1_equalize(input_img);    
+
+    cout << "Press any key to start part 2" << endl;
+    waitKey(0);
+    destroyAllWindows();
+
+    part_2_filtering(equalized);
+    
 }
