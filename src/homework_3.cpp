@@ -72,6 +72,13 @@ void on_trackbar_change(int, void *params) {
     imshow(filter_params->window_name, filter->getResult());
 }
 
+/**
+ * Run part 1 of homework 3 which involves histogram equalization.
+ * The image given as parameter is equalized in RGB space first and then in HSV space, 
+ * showing the results of both operations. The equalized image in HSV space will be returned.
+ * @param input_img The image to be equalized
+ * @return The equalized image
+ */
 Mat part_1_equalize(Mat input_img) {
     // 2. Prints the histograms of the image
     vector<Mat> img_channels;
@@ -107,6 +114,12 @@ Mat part_1_equalize(Mat input_img) {
     return equalized_img;
 }
 
+/**
+ * Run part 2 of homework 3 which involves image filtering.
+ * The image given as input will be filtered with three different filtering methods.
+ * The results are shown with the corresponding trackbars to change the filtering parameters
+ * @param input_img The image to be filtered
+ */
 void part_2_filtering(Mat input_img) {
     // Create windows
     namedWindow("median filter");

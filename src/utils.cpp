@@ -8,6 +8,11 @@
 using namespace std;
 using namespace cv;
 
+/**
+ * Show images in a collage.
+ * 
+ * @param src vector of images
+ */
 void show_collage(const std::vector<cv::Mat> &images, string winname) {
     Mat collage_img = Mat(480,640,CV_8UC3);
     int rows = sqrt(images.size()) + 1;
@@ -15,6 +20,14 @@ void show_collage(const std::vector<cv::Mat> &images, string winname) {
     imshow(winname,collage_img);
 }
 
+/**
+ * Make collage of images
+ * 
+ * @param src vector of images
+ * @param dst destination image matrix
+ * @param grid_x number of columns
+ * @param grid_y number of rows
+ */
 void tile(const vector<Mat> &src, Mat &dst, int grid_x, int grid_y) {
     // patch size
     int width  = dst.cols/grid_x;
@@ -34,6 +47,12 @@ void tile(const vector<Mat> &src, Mat &dst, int grid_x, int grid_y) {
     }
 }
 
+/**
+ * hists = vector of 3 cv::mat of size nbins=256 with the 3 histograms
+ * e.g.: hists[0] = cv:mat of size 256 with the red histogram
+ *       hists[1] = cv:mat of size 256 with the green histogram
+ *       hists[2] = cv:mat of size 256 with the blue histogram
+ */
 void show_histogram(std::vector<cv::Mat> &hists, std::string winname) {
 	// Min/Max computation
 	double hmax[3] = {0, 0, 0};
