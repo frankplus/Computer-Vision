@@ -82,5 +82,9 @@ void show_histogram(std::vector<cv::Mat> &hists, std::string winname) {
 
 		// cv::imshow(hists.size() == 1 ? "value" : winname + " " + wname[i], canvas[i]);
 	}
-    show_collage(canvas, winname);
+
+	// show the three histograms
+    Mat collage_img = Mat(128, 1024,CV_8UC3);
+    tile(canvas, collage_img, 3, 1);
+    imshow(winname,collage_img);
 }

@@ -140,10 +140,10 @@ void part_2_filtering(Mat input_img) {
     createTrackbar("kernel size", "median filter", &median_params.filter_size, 16, on_trackbar_change, (void*)&median_params);
 
     createTrackbar("kernel size", "gaussian filter", &gaussian_params.filter_size, 16, on_trackbar_change, (void*)&gaussian_params);
-    createTrackbar("sigma", "gaussian filter", &gaussian_params.sigma1, 50, on_trackbar_change, (void*)&gaussian_params);
+    createTrackbar("sigma", "gaussian filter", &gaussian_params.sigma1, 200, on_trackbar_change, (void*)&gaussian_params);
 
-    createTrackbar("sigma range", "bilateral filter", &bilateral_params.sigma1, 150, on_trackbar_change, (void*)&bilateral_params);
-    createTrackbar("sigma space", "bilateral filter", &bilateral_params.sigma2, 150, on_trackbar_change, (void*)&bilateral_params);
+    createTrackbar("sigma range", "bilateral filter", &bilateral_params.sigma1, 200, on_trackbar_change, (void*)&bilateral_params);
+    createTrackbar("sigma space", "bilateral filter", &bilateral_params.sigma2, 200, on_trackbar_change, (void*)&bilateral_params);
 
     on_trackbar_change(0, &median_params);
     on_trackbar_change(0, &gaussian_params);
