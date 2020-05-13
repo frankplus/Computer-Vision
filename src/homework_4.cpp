@@ -178,7 +178,7 @@ static void canny_threshold(int, void *params) {
 void main_homework_4() {
 
     // loads an image
-    String path;
+    string path;
     cout << "Type input image path (empty input loads 'data/lab4/input.png'): ";
     getline(cin, path);
     if (path.empty()) {
