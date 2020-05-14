@@ -154,7 +154,7 @@ void part_2_filtering(Mat input_img) {
 
 void main_homework_3() {
 
-    String path;
+    string path;
     cout << "Type input image path (empty input loads 'data/lab3/image.jpg'): ";
     getline(cin, path);
     if (path.empty()) {
