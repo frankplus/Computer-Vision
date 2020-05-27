@@ -6,7 +6,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core.hpp>
-#include <opencv2/xfeatures2d/nonfree.hpp>
+#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/ccalib.hpp>
 
 using namespace std;
 using namespace cv;
@@ -116,7 +117,7 @@ Point2f PanoramicImage::computeTranslation(vector<KeyPoint> &keypoints1, vector<
         points_to.push_back(keypoints2.at(matches.at(j).trainIdx).pt);
     }
 
-    // use find homography to find outliers
+    // use find homography to find inliers
     Mat mask;
     findHomography(points_from, points_to, CV_RANSAC, RANSAC_REPROJ_THRESHOLD, mask);
 
