@@ -1,6 +1,4 @@
 #include "homework_5.h"
-
-#include "panoramic_utils.h"
 #include "panoramic_image.h"
 
 #include <iostream>
