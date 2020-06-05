@@ -1,6 +1,7 @@
 build/
 .vscode/
 my_checkerboard_images
+data/
 
 # generated
 CMakeLists.txt.user
