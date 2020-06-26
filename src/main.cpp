@@ -5,6 +5,7 @@
 #include "homework_4.h"
 #include "homework_5.h"
 #include "homework_6.h"
+#include "finalproject.h"
 
 #include <iostream>
 
@@ -33,6 +34,9 @@ int main(int argc, char** argv) {
         break;
     case 6:
         main_homework_6();
+        break;
+    case 7:
+        main_finalproject();
         break;
     default:
         cout << "invalid homework selection" << endl;
