@@ -44,7 +44,7 @@ struct FilterParams
     int sigma2;
 };
 
-void on_trackbar_change(int, void *params) {
+static void on_trackbar_change(int, void *params) {
     FilterParams *filter_params = static_cast<FilterParams*>(params);
     Filter *filter = filter_params->filter;
 
