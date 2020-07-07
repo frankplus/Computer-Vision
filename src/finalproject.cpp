@@ -19,8 +19,17 @@ static void on_trackbar_change(int, void *params)
 {
     DetectionParams *filter_params = static_cast<DetectionParams*>(params);
 
+    cout << "hue range: " << filter_params->hue_range << endl;
+    cout << "value range: " << filter_params->value_range << endl;
+    cout << "filter_sigma: " << filter_params->filter_sigma << endl;
+    cout << "min_neighbors: " << filter_params->min_neighbors << endl;
+    cout << "min_size: " << filter_params->min_size << endl;
+    cout << "group_thresh: " << filter_params->group_thresh << endl;
+    cout << "group_eps: " << filter_params->group_eps << endl;
+    cout << endl;
+
     preprocess_image(filter_params->input_image, filter_params->filtered_image, 
-                    filter_params->filter_sigma, filter_params->hue_range);
+                    filter_params->filter_sigma, filter_params->hue_range, filter_params->value_range);
 
     detect_and_display(filter_params);
 }
@@ -38,8 +47,10 @@ void main_finalproject()
         return;
     }
 
-    createTrackbar("Hue lower bound", detection_winname, &params.hue_range.start, 128, on_trackbar_change, (void*)&params);
-    createTrackbar("Hue upper bound", detection_winname, &params.hue_range.end, 128, on_trackbar_change, (void*)&params);
+    createTrackbar("Hue lower bound", detection_winname, &params.hue_range.start, 256, on_trackbar_change, (void*)&params);
+    createTrackbar("Hue upper bound", detection_winname, &params.hue_range.end, 256, on_trackbar_change, (void*)&params);
+    createTrackbar("Value lower bound", detection_winname, &params.value_range.start, 256, on_trackbar_change, (void*)&params);
+    createTrackbar("Value upper bound", detection_winname, &params.value_range.end, 256, on_trackbar_change, (void*)&params);
     createTrackbar("Filter sigma range/space", detection_winname, &params.filter_sigma, 200, on_trackbar_change, (void*)&params);
     createTrackbar("Detection min neighbors", detection_winname, &params.min_neighbors, 40, on_trackbar_change, (void*)&params);
     createTrackbar("Detection min size", detection_winname, &params.min_size, 100, on_trackbar_change, (void*)&params);
@@ -50,14 +61,17 @@ void main_finalproject()
     vector<String> images_paths;
     glob(images_path, images_paths);
 
-    for (String imgpath: images_paths) 
+    while(true)
     {
-        cout << imgpath << endl;
-        Mat image = imread(imgpath);
-        resize(image, image, Size(500, 500));
-        params.input_image = image;
-        on_trackbar_change(0, &params);
-        waitKey(0);
+        for (String imgpath: images_paths) 
+        {
+            cout << imgpath << endl;
+            Mat image = imread(imgpath);
+            resize(image, image, Size(500, 500));
+            params.input_image = image;
+            on_trackbar_change(0, &params);
+            waitKey(0);
+        }
     }
 }
 
@@ -82,19 +96,29 @@ void detect_and_display( DetectionParams *params )
     imshow( result_winname, result );
 }
 
-void preprocess_image(Mat input, Mat &result, double sigma, Range hue_range)
+void preprocess_image(Mat input, Mat &result, double sigma, Range hue_range, Range value_range)
 {
+    vector<Mat> img_channels;
+    split(input, img_channels);
+
+    equalizeHist(img_channels[0], img_channels[0]);
+    equalizeHist(img_channels[1], img_channels[1]);
+    equalizeHist(img_channels[2], img_channels[2]);
+
+    Mat equalized_img;
+    merge(img_channels, equalized_img);
+
     Mat filtered;
-    bilateralFilter(input, filtered, 11, sigma, sigma);
+    bilateralFilter(equalized_img, filtered, 11, sigma, sigma);
 
     Mat image_HSV;
     cvtColor(filtered, image_HSV, COLOR_BGR2HSV);
 
     Mat mask;
-    Scalar lower_bound(hue_range.start, 0, 0);
-    Scalar upper_bound(hue_range.end, 255, 255);
+    Scalar lower_bound(hue_range.start, 0, value_range.start);
+    Scalar upper_bound(hue_range.end, 255, value_range.end);
     inRange(image_HSV, lower_bound, upper_bound, mask);
 
     cvtColor( filtered, result, COLOR_BGR2GRAY );
-    result.setTo(Scalar(128,128,128), mask);
+    add(result, Scalar(40), result, mask);
 }
