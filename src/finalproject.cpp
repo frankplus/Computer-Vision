@@ -15,18 +15,12 @@ const String detection_winname = "Detection";
 const String result_winname = "Result";
 
 
+
 static void on_trackbar_change(int, void *params)
 {
     DetectionParams *filter_params = static_cast<DetectionParams*>(params);
 
-    cout << "hue range: " << filter_params->hue_range << endl;
-    cout << "value range: " << filter_params->value_range << endl;
-    cout << "filter_sigma: " << filter_params->filter_sigma << endl;
-    cout << "min_neighbors: " << filter_params->min_neighbors << endl;
-    cout << "min_size: " << filter_params->min_size << endl;
-    cout << "group_thresh: " << filter_params->group_thresh << endl;
-    cout << "group_eps: " << filter_params->group_eps << endl;
-    cout << endl;
+    print_parameters(filter_params);
 
     preprocess_image(filter_params->input_image, filter_params->filtered_image, 
                     filter_params->filter_sigma, filter_params->hue_range, filter_params->value_range);
@@ -54,8 +48,6 @@ void main_finalproject()
     createTrackbar("Filter sigma range/space", detection_winname, &params.filter_sigma, 200, on_trackbar_change, (void*)&params);
     createTrackbar("Detection min neighbors", detection_winname, &params.min_neighbors, 40, on_trackbar_change, (void*)&params);
     createTrackbar("Detection min size", detection_winname, &params.min_size, 100, on_trackbar_change, (void*)&params);
-    createTrackbar("Group threshold", detection_winname, &params.group_thresh, 20, on_trackbar_change, (void*)&params);
-    createTrackbar("Group eps", detection_winname, &params.group_eps, 40, on_trackbar_change, (void*)&params);
 
     // load images
     vector<String> images_paths;
@@ -82,7 +74,6 @@ void detect_and_display( DetectionParams *params )
     vector<Rect> trees;
     Size min_size{params->min_size, params->min_size};
     params->tree_cascade.detectMultiScale( params->filtered_image, trees, 1.05, params->min_neighbors, 0, min_size);
-    groupRectangles(trees, params->group_thresh, params->group_eps/100.0);
 
     for ( size_t i = 0; i < trees.size(); i++ )
     {
@@ -121,4 +112,14 @@ void preprocess_image(Mat input, Mat &result, double sigma, Range hue_range, Ran
 
     cvtColor( filtered, result, COLOR_BGR2GRAY );
     add(result, Scalar(40), result, mask);
+}
+
+void print_parameters(DetectionParams *filter_params)
+{
+    cout << "hue range: " << filter_params->hue_range << endl;
+    cout << "value range: " << filter_params->value_range << endl;
+    cout << "filter_sigma: " << filter_params->filter_sigma << endl;
+    cout << "min_neighbors: " << filter_params->min_neighbors << endl;
+    cout << "min_size: " << filter_params->min_size << endl;
+    cout << endl;
 }

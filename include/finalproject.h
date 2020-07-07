@@ -23,5 +23,6 @@ struct DetectionParams
 void main_finalproject();
 void preprocess_image(Mat input, Mat &result, double sigma, Range hue_range, Range value_range);
 void detect_and_display( DetectionParams *params );
+void print_parameters(DetectionParams *filter_params);
 
 #endif
