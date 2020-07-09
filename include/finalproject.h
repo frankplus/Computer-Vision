@@ -14,9 +14,9 @@ struct DetectionParams
     Range hue_range{0, 195};
     Range value_range{92, 256};
     int filter_sigma = 61;
-    int min_neighbors = 7;
-    int min_size = 90;
-    int delta_brightness = 45;
+    int min_neighbors = 32;
+    int min_size = 55;
+    int delta_brightness = 55;
 };
 
 void main_finalproject();
