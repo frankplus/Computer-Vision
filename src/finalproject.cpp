@@ -49,7 +49,7 @@ void main_finalproject()
     createTrackbar("Value upper bound", detection_winname, &params.value_range.end, 256, on_trackbar_change, (void*)&params);
     createTrackbar("Filter sigma range/space", detection_winname, &params.filter_sigma, 200, on_trackbar_change, (void*)&params);
     createTrackbar("Detection min neighbors", detection_winname, &params.min_neighbors, 80, on_trackbar_change, (void*)&params);
-    createTrackbar("Detection min size", detection_winname, &params.min_size, 100, on_trackbar_change, (void*)&params);
+    createTrackbar("Detection min size", detection_winname, &params.min_size, 200, on_trackbar_change, (void*)&params);
     createTrackbar("Delta brightness", detection_winname, &params.delta_brightness, 100, on_trackbar_change, (void*)&params);
 
     // load images
